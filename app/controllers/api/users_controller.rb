@@ -12,7 +12,7 @@ class Api::UsersController < ApplicationController
 
     def details
       @user = User.find(params[:id])
-      render json: @user, id: params[:id]
+      render 'api/users/details'
     end
 
     private

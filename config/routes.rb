@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   root to: 'pages#home'
 
+  get '/login'           => 'pages#login'
+  get '/signup'          => 'pages#signup'
+  get '/account'         => 'pages#account'
+
   namespace :api do
     # users
     post '/users'     => 'users#create'

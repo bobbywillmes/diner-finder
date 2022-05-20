@@ -1,0 +1,8 @@
+<div id="root"></div>
+
+<%= javascript_packs_with_chunks_tag 'account', 'application' %>
+<%= stylesheet_packs_with_chunks_tag 'account', 'application' %>
+
+<%= javascript_tag do %>
+  var userId = <%= raw(@user.id.to_json) %>
+<% end %>

@@ -5,7 +5,7 @@ class Api::SessionsController < ApplicationController
 
       if @user and BCrypt::Password.new(@user.password) == params[:user][:password]
         session = @user.sessions.create
-        cookies.permanent.signed[:airbnb_session_token] = {
+        cookies.permanent.signed[:diner_session_token] = {
           value: session.token,
           httponly: true
         }
@@ -18,7 +18,7 @@ class Api::SessionsController < ApplicationController
     end
 
     def authenticated
-      token = cookies.signed[:airbnb_session_token]
+      token = cookies.signed[:diner_session_token]
       session = Session.find_by(token: token)
 
       if session
@@ -32,7 +32,7 @@ class Api::SessionsController < ApplicationController
     end
 
     def destroy
-      token = cookies.signed[:airbnb_session_token]
+      token = cookies.signed[:diner_session_token]
       session = Session.find_by(token: token)
 
       if session and session.destroy
