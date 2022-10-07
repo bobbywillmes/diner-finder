@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   has_many :sessions
+  has_many :businesses
 
   validates :email,     presence: true, length: { minimum: 5, maximum: 500 }
   validates :name,      presence: true, length: { minimum: 2, maximum: 200 }

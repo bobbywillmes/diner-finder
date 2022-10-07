@@ -14,6 +14,16 @@ Rails.application.routes.draw do
     post '/sessions'        => 'sessions#create'
     delete '/sessions'      => 'sessions#destroy'
     get  '/authenticated'   => 'sessions#authenticated'
+
+    # businesses
+    post '/biz'           => 'businesses#create'
+    get '/biz'            => 'businesses#index'
+    get '/biz/:id'        => 'businesses#show'
+    patch '/biz/:id'      => 'businesses#update'
+    delete '/biz/:id'     => 'businesses#destroy'
+    get '/search/'        => 'businesses#filter'
+    get 'categories'      => 'businesses#categories'
+    get 'locations'       => 'businesses#locations'
   end
 
 end

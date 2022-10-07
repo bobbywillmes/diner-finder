@@ -10,7 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_05_06_221218) do
+ActiveRecord::Schema.define(version: 2022_10_06_193230) do
+
+  create_table "businesses", force: :cascade do |t|
+    t.string "name"
+    t.string "address"
+    t.string "city"
+    t.string "state"
+    t.string "zipcode"
+    t.string "phone"
+    t.string "website"
+    t.text "categories"
+    t.integer "user_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_id"], name: "index_businesses_on_user_id"
+  end
 
   create_table "sessions", force: :cascade do |t|
     t.string "token"
@@ -31,5 +46,6 @@ ActiveRecord::Schema.define(version: 2022_05_06_221218) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  add_foreign_key "businesses", "users"
   add_foreign_key "sessions", "users"
 end
