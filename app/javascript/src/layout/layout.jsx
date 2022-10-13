@@ -1,6 +1,7 @@
 import React from 'react';
 import { apiAuthenticated } from '../../api/user';
 import './layout.scss';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const LoggedInLinks = (props) => {
   if (props.authenticated) {
@@ -21,6 +22,45 @@ const LoggedInLinks = (props) => {
           <a className="nav-link" href="/signup">Signup</a>
         </li>
       </React.Fragment>
+    )
+  }
+}
+
+class SearchBox extends React.Component {
+  state = {
+    query: ''
+  }
+
+  componentDidMount() {
+    const params = new URLSearchParams(window.location.search);
+    let query = params.get('q');
+    if (query == null) {
+      this.setState({ query: '' })
+    } else {
+      this.setState({ query: query })
+    }
+  }
+
+  handleChange = (e) => {
+    this.setState({ [e.target.name]: e.target.value });
+  }
+
+  handleSubmit = (e) => {
+    console.log(`handleSubmit() ---`);
+    e.preventDefault();
+    window.location = `/search?q=${this.state.query}`
+  }
+
+  render() {
+    return (
+      <form id="searchbox" className="input-group stylish-input-group" onSubmit={this.handleSubmit}>
+        <input name="query" type="text" className="form-control" placeholder="Search" onChange={this.handleChange} value={this.state.query} />
+        <span className="input-group-addon">
+          <button type="submit" className="btn btn-primary" onSubmit={this.handleSubmit}>
+            <FontAwesomeIcon color="white" icon={['fas', 'search']} />
+          </button>
+        </span>
+      </form>
     )
   }
 }
@@ -49,6 +89,7 @@ class Layout extends React.Component {
               </li>
               <LoggedInLinks authenticated={this.state.authenticated} />
             </ul>
+            <SearchBox />
           </div>
         </nav>
         <div className="contentWrap container">

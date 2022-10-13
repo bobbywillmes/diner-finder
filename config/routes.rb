@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   get '/login'           => 'pages#login'
   get '/signup'          => 'pages#signup'
   get '/account'         => 'pages#account'
+  get '/biz/:id'         => 'pages#business'
+  get '/search'          => 'pages#search'
 
   namespace :api do
     # users
