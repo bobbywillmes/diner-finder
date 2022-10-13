@@ -70,10 +70,11 @@ class Api::BusinessesController < ApplicationController
     # else, search is by keyword, filter businesses by name & category
     if isKeyword
       keyword = @params["keyword"][0]
+      keyword = keyword.downcase
       @allBusinesses = Business.all
       filtered = []
-      @name = @allBusinesses.where("name LIKE ?", "%" + keyword + "%")
-      @category = @allBusinesses.where("categories LIKE ?", "%" + keyword + "%")
+      @name = @allBusinesses.where("LOWER(name) LIKE ?", "%" + keyword + "%")
+      @category = @allBusinesses.where("LOWER(categories) LIKE ?", "%" + keyword + "%")
       filtered.push(@name).push(@category)
       @businesses = filtered.flatten.uniq
     end
