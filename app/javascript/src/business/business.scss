@@ -1,0 +1,10 @@
+.container .image {
+  border: 2px solid red;
+  padding: 1rem;
+  margin: 1rem;
+
+  img {
+    max-width: 500px;
+    max-height: 500px;
+  }
+}

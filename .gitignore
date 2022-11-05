@@ -40,3 +40,6 @@
 /yarn-error.log
 yarn-debug.log*
 .yarn-integrity
+
+# gcs credentials
+config/gcs_keyfile.json

@@ -26,6 +26,13 @@ Rails.application.routes.draw do
     get '/search/'        => 'businesses#filter'
     get 'categories'      => 'businesses#categories'
     get 'locations'       => 'businesses#locations'
+
+    # images
+    post '/biz/:id/image' => 'images#create'
+    get '/images'         => 'images#show'
+    get '/biz/:id/images' => 'images#find'
+    delete '/images/:id'  => 'images#delete'
+    patch '/images/:id'   => 'images#update'
   end
 
 end

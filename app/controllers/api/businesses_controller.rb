@@ -10,6 +10,7 @@ class Api::BusinessesController < ApplicationController
 
   def show
     @business = Business.find_by(id: params[:id])
+    @images = Image.where(business_id: params[:id])
     return render json: { error: 'not_found' }, status: :not_found if !@business
     render 'api/businesses/show', status: :ok
   end
@@ -139,6 +140,6 @@ class Api::BusinessesController < ApplicationController
   def business_params
     params
       .require(:business)
-      .permit(:name, :address, :city, :state, :zipcode, :phone, :website, :categories, :user)
+      .permit(:name, :address, :city, :state, :zipcode, :phone, :website, :categories, :user, images: [])
   end
 end
