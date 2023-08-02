@@ -1,5 +1,5 @@
 class BusinessSerializer < ActiveModel::Serializer
-  attributes :id, :name, :test, :images
+  attributes :id, :name, :images, :reviews
 
   def url
     if object.image.attached?

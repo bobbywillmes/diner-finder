@@ -1,33 +1,13 @@
 import React from 'react';
-import { getBusiness, uploadPhoto, deletePhoto, updatePhotoDetails } from '../../api/business';
+import { useState } from 'react';
+import { getBusiness, uploadPhoto, deletePhoto, updatePhotoDetails, postReview, getReviews, deleteReview } from '../../api/business';
+import NewReview from '../components/reviews/newReview';
+import { AvgRating } from '../components/rating/rating';
+import { Reviews } from '../components/reviews/reviews';
 import { apiAuthenticated } from '../../api/user';
-import { Categories } from '../helpers/utils';
-import Resizer from "react-image-file-resizer";
+import { Categories, parseCategories, resizeImage } from '../helpers/utils';
 import { withAlert } from 'react-alert';
-
-
-function parseCategories(text) {
-  return new Promise((resolve, reject) => {
-    const arr = JSON.parse(text);
-    resolve(arr);
-  })
-}
-
-const resizeImage = (img) =>
-  new Promise((resolve) => {
-    Resizer.imageFileResizer(
-      img,
-      2000, // max-width
-      2000, // max-height
-      "JPEG",  // file type
-      50,  // quality
-      0, // rotation
-      (uri) => {
-        resolve(uri);
-      },
-      "file" // output type
-    );
-  })
+import { Button, Modal } from 'react-bootstrap';
 
 class ImageUpload extends React.Component {
   state = {
@@ -46,6 +26,11 @@ class ImageUpload extends React.Component {
             <button className="btn btn-secondary">Upload</button>
           </form>
         </div>
+      )
+    }
+    else {
+      return (
+        <a href="/login" className="btn btn-info">Login to upload an image.</a>
       )
     }
   }
@@ -80,7 +65,6 @@ class ImageEdit extends React.Component {
     const photoId = e.target.parentNode.parentNode.parentNode.getAttribute('id');
     this.props.handleImageDelete(photoId)
   }
-
 
   handleImageUpdate = (e) => {
     e.preventDefault()
@@ -137,6 +121,8 @@ class ImageView extends React.Component {
         <strong>Description: </strong> <span>{this.props.image.description}</span>
         <br />
         <strong>Category: </strong> <span>{this.props.image.category}</span>
+        <br />
+        <strong>User: </strong> <span>{this.props.image.userName} from {this.props.image.userLocation}</span>
         <br /><br />
         {this.state.authorizedToEdit ? <button className="btn btn-primary" onClick={this.props.toggleEdit}>Edit Info</button> : ''}
       </div>
@@ -196,13 +182,41 @@ class Images extends React.Component {
   }
 }
 
+function PostReviewBtn(props) {
+  // button to show modal with NewReview component
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
+  return (
+    <>
+      <Button id="postReviewBtn" onClick={handleShow}>
+        Post a Review
+      </Button>
+      <Modal id="reviewModal" show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Post a Review</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <NewReview
+            handleReviewSubmit={props.handleReviewSubmit}
+            business_id={props.business_id}
+            user_id={props.user_id}
+            handleClose={handleClose} />
+        </Modal.Body>
+      </Modal>
+    </>
+  );
+}
+
 class Business extends React.Component {
   state = {
     business: {},
     categories: [],
     authenticated: false,
     user_id: '',
-    images: []
+    images: [],
+    reviews: []
   }
 
   componentDidMount() {
@@ -215,12 +229,21 @@ class Business extends React.Component {
             .then(res => this.setState({ categories: res }))
         }
       })
+    getReviews(this.props.id)
+      .then(res => {
+        if (res.status === 200) {
+          this.setState({ reviews: res.data.reviews })
+        }
+        else {
+          console.log('error getting reviews')
+          console.log(res)
+        }
+      })
     apiAuthenticated()
       .then(res => {
         if (res.data.authenticated) {
           this.setState({ authenticated: true });
           this.setState({ user_id: res.data.user_id });
-          console.log(this.state);
         }
       })
   }
@@ -229,15 +252,18 @@ class Business extends React.Component {
     e.preventDefault();
     const resizedImages = []
     let formData = new FormData();
-    resizeImage(this.state.image)
+    resizeImage(this.state.image[0])
       .then(res => {
         resizedImages.push(res);
         this.setState({ resizedImages: resizedImages });
         formData.append('image[image]', res);
+        formData.append('image[user_id]', this.state.user_id);
         uploadPhoto(this.state.business.id, formData)
           .then(res => {
-            if (res.status === 200) {
-              this.setState({ images: res.data.images });
+            if (res.status === 201) {
+              let oldImages = this.state.images
+              oldImages.push(res.data.image)
+              this.setState({ images: oldImages })
               this.props.alert.success('image uploaded');
             }
           })
@@ -246,7 +272,7 @@ class Business extends React.Component {
   }
 
   handleInputChange = (e) => {
-    this.setState({ image: e.target.files[0] })
+    this.setState({ image: e.target.files })
   }
 
   updateImageState = (updatedImage) => {
@@ -297,10 +323,54 @@ class Business extends React.Component {
       })
   }
 
+  updateReviewsState = (data) => {
+    //  add new review to state
+    let oldReviews = this.state.reviews;
+    const newReview = data;
+    let newReviews = oldReviews;
+    newReviews.unshift(newReview);
+    this.setState({ reviews: newReviews });
+  }
+
+  handleReviewSubmit = (data) => {
+    return new Promise((resolve, reject) => {
+      postReview(this.props.id, data)
+        .then(res => {
+          if (res.status === 201) {
+            this.props.alert.show('Review posted!');
+            this.updateReviewsState(res.data.review);
+            resolve({ resolved: true, apiRes: res })
+          } else {
+            reject({ resolved: false })
+            console.log(`postReview else`);
+            console.log(res)
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        })
+    })
+  }
+
+  handleReviewDelete = (reviewId) => {
+    deleteReview(reviewId)
+      .then(res => {
+        if (res.status === 200) {
+          this.props.alert.success('Review deleted.')
+          let reviews = this.state.reviews
+          let newReviews = reviews.filter(review => {
+            return review.id !== reviewId
+          })
+          this.setState({ reviews: newReviews })
+        }
+      })
+  }
+
   render() {
     return (
       <div id="business">
         <h1>{this.state.business.name}</h1>
+        <AvgRating reviewsSummary={this.state.business.reviewsSummary} />
         <p>{this.state.business.address} {this.state.business.city}, {this.state.business.state}</p>
         <Categories categories={this.state.categories} />
         <p>{this.state.business.phone}</p>
@@ -312,6 +382,19 @@ class Business extends React.Component {
           handleUpload={this.handleUpload}
           handleInputChange={this.handleInputChange} />
         <br />
+        <h1>Reviews</h1>
+        <PostReviewBtn
+          handleReviewSubmit={this.handleReviewSubmit}
+          user_id={this.state.user_id}
+          business_id={this.state.business.id} />
+        <Reviews
+          reviews={this.state.reviews}
+          reviewsSummary={this.state.business.reviewsSummary}
+          authenticated={this.state.authenticated}
+          user_id={this.state.user_id}
+          handleUpload={this.handleUpload}
+          handleInputChange={this.handleInputChange}
+          handleReviewDelete={this.handleReviewDelete} />
         <Images
           images={this.state.images}
           authenticated={this.state.authenticated}

@@ -1,0 +1,16 @@
+.ratingSummary,
+.reviewStars {
+  .star {
+    background-color: red;
+    color: white !important;
+    border-radius: 5px;
+    margin: 1px;
+  }
+  .empty {
+    background-color: #ddd;
+  }
+}
+
+.ratingSummary {
+  margin: 1rem;
+}

@@ -5,8 +5,7 @@ import Businesses from '../components/businesses/businesses';
 class Home extends React.Component {
   state = {
     bizName: 'Diner Finder',
-    businesses: [],
-    businessesArr: []
+    businesses: []
   }
 
   componentDidMount() {
@@ -18,6 +17,8 @@ class Home extends React.Component {
             business.categories = categoryArr;
           })
           this.setState({ businesses: res.data.businesses })
+          console.log(this.state);
+          console.log(this.state.businesses);
         }
         else {
           console.log('uh oh...')

@@ -33,6 +33,11 @@ Rails.application.routes.draw do
     get '/biz/:id/images' => 'images#find'
     delete '/images/:id'  => 'images#delete'
     patch '/images/:id'   => 'images#update'
+
+    #reviews
+    post '/biz/:id/review'  => 'reviews#create'
+    get '/biz/:id/reviews'  => 'reviews#show'
+    delete '/reviews/:id'   => 'reviews#delete'
   end
 
 end

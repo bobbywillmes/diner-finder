@@ -36,3 +36,25 @@ export function deletePhoto(id) {
     url: `/api/images/${id}`
   })
 }
+
+export function postReview(bizId, data) {
+  return axios({
+    method: 'post',
+    url: `/api/biz/${bizId}/review`,
+    data: data
+  })
+}
+
+export function getReviews(bizId) {
+  return axios({
+    method: 'get',
+    url: `/api/biz/${bizId}/reviews`
+  })
+}
+
+export function deleteReview(id) {
+  return axios({
+    method: 'delete',
+    url: `/api/reviews/${id}`
+  })
+}

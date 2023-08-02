@@ -1,5 +1,6 @@
 class ImageSerializer < ActiveModel::Serializer
   attributes :id
+  belongs_to :review
 
   def url
     if object.image.attached?

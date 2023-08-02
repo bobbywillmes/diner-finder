@@ -7,14 +7,15 @@ class Api::ImagesController < ApplicationController
     user = User.find_by(id: user_id)
     business = Business.find_by(id: params[:id])
     business_id = params[:id]
+    review = Review.find_by(id: params[:image][:review_id])
 
     @image = Image.new(image_params)
     @image.business = business
     @image.user = user
+    @image.review = review
 
     if @image.save
-      @images = Image.where(business_id: business_id)
-      render 'api/images/show'
+      render 'api/images/show', status: :created
     else
       render json: {err: @image.errors, error: 'unable to upload image :('}
     end
@@ -71,6 +72,6 @@ class Api::ImagesController < ApplicationController
   def image_params
     params
       .require(:image)
-      .permit(:description, :category, :image, :images, :user_id, :business_id, :business, :user)
+      .permit(:description, :category, :image, :images, :user_id, :business_id, :business, :user, :review_id)
   end
 end
