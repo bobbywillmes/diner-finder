@@ -1,0 +1,73 @@
+#gallery {
+  height: 80vh;
+  overflow-y: scroll;
+  overflow-x: clip;
+  img.thumbnail {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    margin: 0.2rem;
+    cursor: pointer;
+  }
+  img.full {
+    max-width: unset;
+  }
+  #image {
+    height: 100%;
+  }
+  #image img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 80vh;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .imageCol {
+    position: relative;
+    max-height: 80vh;
+  }
+  .iconWrap {
+    position: absolute;
+    top: 50%;
+  }
+  .left {
+    left: 2rem;
+  }
+  .right {
+    right: 2rem;
+  }
+  .imageButton {
+    font-size: 80px;
+    color: red;
+  }
+  .imageButton:hover {
+    color: darkred;
+    cursor: pointer;
+  }
+  .imageButton.disabled {
+    color: #ff8e8e !important;
+  }
+  .imageButton.disabled:hover {
+    cursor: not-allowed !important;
+  }
+
+  .update-alert {
+    font-size: 24px;
+    position: absolute !important;
+    top: 40%;
+  }
+
+  form#filterButtons {
+    .selected {
+      background: red !important;
+    }
+    .form-check {
+      display: inline-block;
+    }
+    input {
+      display: none;
+    }
+  }
+}

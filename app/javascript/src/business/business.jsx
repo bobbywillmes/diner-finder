@@ -1,185 +1,76 @@
 import React from 'react';
 import { useState } from 'react';
-import { getBusiness, uploadPhoto, deletePhoto, updatePhotoDetails, postReview, getReviews, deleteReview } from '../../api/business';
+import { getBusiness, uploadPhoto, deletePhoto, updatePhotoDetails, postReview, getReviews, deleteReview, updateBusiness } from '../../api/business';
 import NewReview from '../components/reviews/newReview';
 import { AvgRating } from '../components/rating/rating';
 import { Reviews } from '../components/reviews/reviews';
+import Gallery from '../components/gallery/gallery';
+import Editor from '../components/editor/editor';
+import PhotoUpload from '../components/photoUpload/photoUpload';
 import { apiAuthenticated } from '../../api/user';
 import { Categories, parseCategories, resizeImage } from '../helpers/utils';
 import { withAlert } from 'react-alert';
 import { Button, Modal } from 'react-bootstrap';
 
-class ImageUpload extends React.Component {
-  state = {
-    image: undefined,
-    resizedImages: undefined
-  }
+function PhotoGalleryBtn(props) {
+  // button to show modal with Gallery component
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
 
-  render() {
-    if (this.props.authenticated) {
-      return (
-        <div id="upload">
-          <h4>Upload a photo</h4>
-          <form onSubmit={this.props.handleUpload}>
-            <input type="file" name="image" onChange={this.props.handleInputChange} />
-            <br />
-            <button className="btn btn-secondary">Upload</button>
-          </form>
-        </div>
-      )
-    }
-    else {
-      return (
-        <a href="/login" className="btn btn-info">Login to upload an image.</a>
-      )
-    }
-  }
-}
-
-class ImageEdit extends React.Component {
-  state = {
-    description: '',
-    category: undefined
-  }
-
-  componentDidMount() {
-    this.setState({ description: this.props.description })
-    this.preSelectCategory()
-  }
-
-  handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  }
-
-  preSelectCategory() {
-    const category = this.props.category;
-    const options = document.querySelector('#category').children;
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].value == category) {
-        options[i].selected = true;
-      }
-    }
-  }
-
-  handleImageDelete = (e) => {
-    const photoId = e.target.parentNode.parentNode.parentNode.getAttribute('id');
-    this.props.handleImageDelete(photoId)
-  }
-
-  handleImageUpdate = (e) => {
-    e.preventDefault()
-    this.props.handleImageUpdate(this.props.id, this.state.description, this.state.category)
-      .then(res => {
-        this.props.toggleEdit()
-      })
-  }
-
-  render() {
-    return (
-      <div id="edit">
-        <h2>Edit Image Info..</h2>
-        <button className="btn btn-secondary" onClick={this.props.toggleEdit}>Cancel Edit</button>
-        <form onSubmit={this.handleImageUpdate}>
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <textarea className="form-control" id="description" name="description" rows="3" value={this.state.description == null ? '' : this.state.description} onChange={this.handleChange} ></textarea>
-            <small id="descriptionHelp" className="form-text text-muted">How did it taste? What did you love about it?</small>
+  return (
+    <>
+      <Button id="photoGalleryBtn" onClick={handleShow}>
+        See all photos
+      </Button>
+      <Modal id="galleryModal" show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Photos for {props.bizName}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div id="galleryWrap">
+            <Gallery
+              images={props.images}
+              bizId={props.bizId}
+              authenticated={props.authenticated}
+              user_id={props.user_id}
+              updatePrimaryImage={props.updatePrimaryImage}
+              isBusinessOwner={props.isBusinessOwner}
+              handleImageUpdate={props.handleImageUpdate}
+              handleImageDelete={props.handleImageDelete}
+            />
           </div>
-          <div className="form-group">
-            <label htmlFor="category">What is the photo of?</label>
-            <select className="form-control" id="category" name="category" onChange={this.handleChange}>
-              <option>Make a selection</option>
-              <option value="food">Food</option>
-              <option value="drink">Drink</option>
-              <option value="inside">Inside</option>
-              <option value="outside">Outside</option>
-            </select>
+        </Modal.Body>
+      </Modal>
+    </>
+  )
+}
+
+function UploadPhotoBtn(props) {
+  // button to show modal with PhotoUpload component
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
+  return (
+    <>
+      <Button id="uploadPhotoBtn" onClick={handleShow}>Upload Photos</Button>
+      <Modal id="uploadPhotoModal" show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Upload photos for {props.business.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div id="uploadPhotoWrap">
+            <PhotoUpload
+              handleUpload={props.handleUpload}
+              handleImageUpdate={props.handleImageUpdate}
+              handleClose={handleClose}
+            />
           </div>
-          <button type="submit" className="btn btn-primary">Submit</button>
-        </form>
-        <button className="btn btn-warning" onClick={this.handleImageDelete}>Delete Image</button>
-      </div>
-    )
-  }
-}
-
-class ImageView extends React.Component {
-  state = {
-    authorizedToEdit: false
-  }
-
-  componentDidMount() {
-    if (this.props.image.user_id === this.props.user_id) {
-      this.setState({ authorizedToEdit: true })
-    }
-  }
-
-  render() {
-    return (
-      <div id="view">
-        <h2>View Image info</h2>
-        <strong>Description: </strong> <span>{this.props.image.description}</span>
-        <br />
-        <strong>Category: </strong> <span>{this.props.image.category}</span>
-        <br />
-        <strong>User: </strong> <span>{this.props.image.userName} from {this.props.image.userLocation}</span>
-        <br /><br />
-        {this.state.authorizedToEdit ? <button className="btn btn-primary" onClick={this.props.toggleEdit}>Edit Info</button> : ''}
-      </div>
-    )
-  }
-}
-
-class Image extends React.Component {
-  state = {
-    edit: false
-  }
-
-  toggleEdit = () => {
-    this.setState({ edit: !this.state.edit })
-  }
-
-  render() {
-    return (
-      <div id={this.props.image.id} key={this.props.image.id} className="row image">
-        <div className="col">
-          <img src={this.props.image.url} alt="" />
-        </div>
-        <div className="col">
-          {this.state.edit ?
-            <ImageEdit
-              toggleEdit={this.toggleEdit}
-              id={this.props.image.id}
-              description={this.props.image.description}
-              category={this.props.image.category}
-              handleImageUpdate={this.props.handleImageUpdate}
-              handleImageDelete={this.props.handleImageDelete}
-            /> :
-            <ImageView
-              image={this.props.image}
-              toggleEdit={this.toggleEdit}
-              authenticated={this.props.authenticated}
-              user_id={this.props.user_id}
-            />}
-        </div>
-      </div>
-    )
-  }
-}
-
-class Images extends React.Component {
-  render() {
-    return (
-      <div className="container">
-        <h3>Images</h3>
-        {this.props.images.map(image => {
-          return (
-            <Image image={image} key={image.id} authenticated={this.props.authenticated} user_id={this.props.user_id} handleImageUpdate={this.props.handleImageUpdate} handleImageDelete={this.props.handleImageDelete} />
-          )
-        })}
-      </div>
-    )
-  }
+        </Modal.Body>
+      </Modal>
+    </>
+  )
 }
 
 function PostReviewBtn(props) {
@@ -209,26 +100,121 @@ function PostReviewBtn(props) {
   );
 }
 
+function checkIfAuthenticated() {
+  return new Promise((resolve, reject) => {
+    apiAuthenticated()
+      .then(res => {
+        if (res.data.authenticated) {
+          resolve({
+            authenticated: true,
+            user_id: res.data.user_id,
+            data: res.data
+          })
+        } else {
+          reject({ authenticated: false })
+        }
+      })
+  })
+}
+
+function getBusinessData(bizId) {
+  return new Promise((resolve, reject) => {
+    getBusiness(bizId)
+      .then(res => {
+        if (res.status === 200) {
+          resolve({
+            business: res.data.business
+          })
+        } else {
+          reject({ note: 'failed to getBusiness()' })
+        }
+      })
+      .catch(err => console.log(err))
+  })
+}
+
+function PrimaryPhoto(props) {
+  if (!props.photo) {
+    return
+  } else if (props.photo.isPlaceholder) {
+    return (
+      <div id="primaryPhoto">
+        <img src={props.photo.url} alt="" />
+      </div>
+    )
+  } else {
+    return (
+      <div id="primaryPhoto">
+        <img src={props.photo.url} alt="" />
+        <PhotoGalleryBtn
+          images={props.images}
+          bizName={props.bizName}
+          bizId={props.bizId}
+          authenticated={props.authenticated}
+          user_id={props.user_id}
+          isBusinessOwner={props.isBusinessOwner}
+          updatePrimaryImage={props.updatePrimaryImage}
+          handleImageUpdate={props.handleImageUpdate}
+          handleImageDelete={props.handleImageDelete}
+        />
+      </div>
+    )
+  }
+}
+
+function EditBusinessBtn(props) {
+  // button to show modal with business Editor component
+  if (!props.isBusinessOwner) {
+    return
+  }
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
+  return (
+    <>
+      <Button id="editBusinessBtn" onClick={handleShow}>
+        Edit Business
+      </Button>
+      <Modal id="editorModal" show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit {props.business.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div id="editorWrap">
+            <Editor business={props.business} updateBusiness={props.updateBusiness} />
+          </div>
+        </Modal.Body>
+      </Modal>
+    </>
+  )
+}
+
 class Business extends React.Component {
   state = {
     business: {},
     categories: [],
     authenticated: false,
+    isBusinessOwner: false,
     user_id: '',
     images: [],
     reviews: []
   }
 
   componentDidMount() {
-    getBusiness(this.props.id)
+    getBusinessData(this.props.id)
       .then(res => {
-        if (res.status === 200) {
-          this.setState({ business: res.data.business })
-          this.setState({ images: res.data.business.images })
-          parseCategories(res.data.business.categories)
-            .then(res => this.setState({ categories: res }))
+        const business = res.business;
+        this.setState({ business: business })
+        this.setState({ images: business.images })
+        if (business.userInfo.isOwner) {
+          this.setState({ isBusinessOwner: true })
         }
+        parseCategories(business.categories)
+          .then(res => this.setState({ categories: res }))
+        document.title = this.state.business.name
       })
+
     getReviews(this.props.id)
       .then(res => {
         if (res.status === 200) {
@@ -239,36 +225,31 @@ class Business extends React.Component {
           console.log(res)
         }
       })
-    apiAuthenticated()
+
+    checkIfAuthenticated()
       .then(res => {
-        if (res.data.authenticated) {
+        if (res.authenticated) {
           this.setState({ authenticated: true });
-          this.setState({ user_id: res.data.user_id });
+          this.setState({ user_id: res.user_id });
         }
       })
   }
 
-  handleUpload = (e) => {
-    e.preventDefault();
-    const resizedImages = []
-    let formData = new FormData();
-    resizeImage(this.state.image[0])
-      .then(res => {
-        resizedImages.push(res);
-        this.setState({ resizedImages: resizedImages });
-        formData.append('image[image]', res);
-        formData.append('image[user_id]', this.state.user_id);
-        uploadPhoto(this.state.business.id, formData)
-          .then(res => {
-            if (res.status === 201) {
-              let oldImages = this.state.images
-              oldImages.push(res.data.image)
-              this.setState({ images: oldImages })
-              this.props.alert.success('image uploaded');
-            }
-          })
-          .catch(err => console.log(err))
-      })
+  handleUpload = (image) => {
+    return new Promise((resolve, reject) => {
+      resizeImage(image)
+        .then(res => {
+          let formData = new FormData();
+          formData.append('image[image]', res)
+          formData.append('image[user_id]', this.state.user_id)
+          uploadPhoto(this.state.business.id, formData)
+            .then(res => {
+              this.updateImagesState(res.data.image)
+              resolve(res)
+            })
+        })
+        .catch(err => reject(err))
+    })
   }
 
   handleInputChange = (e) => {
@@ -287,19 +268,20 @@ class Business extends React.Component {
     }
   }
 
-  handleImageUpdate = (imageId, description, category) => {
+  handleImageUpdate = (imageId, data) => {
     // build formdata to update image info(description & category), send to API & return as a promise
     let formData = new FormData();
-    formData.append('image[description]', description);
-    formData.append('image[category]', category);
+    formData.append('image[description]', data.description);
+    formData.append('image[category]', data.category);
     return new Promise((resolve, reject) => {
       updatePhotoDetails(imageId, formData)
         .then(res => {
           if (res.status === 200) {
             this.updateImageState(res.data.image);
             this.props.alert.show('image updated');
-            resolve({ resolved: true })
+            resolve(res)
           } else {
+            console.log(res)
             reject({ resolved: false })
           }
         })
@@ -308,19 +290,27 @@ class Business extends React.Component {
 
   handleImageDelete = (photoId) => {
     // delete photo by API, then if response returns successful remove image from state
-    deletePhoto(photoId)
-      .then(res => {
-        if (res.status === 200) {
-          const newImages = this.state.images.filter((image) => {
-            return Number(image.id) !== Number(photoId)
-          })
-          this.setState({ images: newImages });
-          this.props.alert.success('image deleted');
-        }
-      })
-      .catch(err => {
-        console.log(err);
-      })
+    return new Promise((resolve, reject) => {
+      return deletePhoto(photoId)
+        .then(res => {
+          if (res.status === 200) {
+            const newImages = this.state.images.filter((image) => {
+              return Number(image.id) !== Number(photoId)
+            })
+            this.setState({ images: newImages });
+            this.props.alert.success('image deleted');
+            resolve(res)
+          }
+        })
+        .catch(err => reject(err))
+    })
+  }
+
+  updateImagesState = (image) => {
+    // add new image to state
+    let newImages = this.state.images;
+    newImages.push(image);
+    this.setState({ images: newImages })
   }
 
   updateReviewsState = (data) => {
@@ -366,22 +356,77 @@ class Business extends React.Component {
       })
   }
 
+  updatePrimaryImage = (image) => {
+    let formData = new FormData()
+    formData.append('business[primary_photo_id]', image.id)
+    return new Promise((resolve, reject) => {
+      updateBusiness(this.state.business.id, formData)
+        .then(res => {
+          if (res.status === 200) {
+            let updatedBiz = this.state.business
+            updatedBiz.primaryPhoto = image
+            this.setState({ business: updatedBiz })
+            resolve(res)
+          } else {
+            reject(res)
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          reject(err)
+        })
+
+    })
+  }
+
+  updateBusiness = (data) => {
+    return new Promise((resolve, reject) => {
+      updateBusiness(this.state.business.id, data)
+        .then(res => {
+          if (res.status === 200) {
+            this.setState({ business: res.data.business })
+            resolve(res);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          reject(err);
+        })
+    })
+  }
+
   render() {
     return (
       <div id="business">
         <h1>{this.state.business.name}</h1>
         <AvgRating reviewsSummary={this.state.business.reviewsSummary} />
+        <PrimaryPhoto
+          photo={this.state.business.primaryPhoto}
+          images={this.state.images}
+          bizName={this.state.business.name}
+          bizId={this.state.business.id}
+          authenticated={this.state.authenticated}
+          user_id={this.state.user_id}
+          updatePrimaryImage={this.updatePrimaryImage}
+          isBusinessOwner={this.state.isBusinessOwner}
+          handleImageUpdate={this.handleImageUpdate}
+          handleImageDelete={this.handleImageDelete}
+        />
+        <EditBusinessBtn
+          isBusinessOwner={this.state.isBusinessOwner}
+          business={this.state.business}
+          updateBusiness={this.updateBusiness}
+        />
         <p>{this.state.business.address} {this.state.business.city}, {this.state.business.state}</p>
         <Categories categories={this.state.categories} />
         <p>{this.state.business.phone}</p>
         <p><a href={this.state.business.website} target="_blank">{this.state.business.website}</a></p>
-        <ImageUpload
-          authenticated={this.state.authenticated}
-          user_id={this.state.user_id}
-          business_id={this.state.business.id}
-          handleUpload={this.handleUpload}
-          handleInputChange={this.handleInputChange} />
         <br />
+        <UploadPhotoBtn
+          business={this.state.business}
+          handleUpload={this.handleUpload}
+          handleImageUpdate={this.handleImageUpdate}
+        />
         <h1>Reviews</h1>
         <PostReviewBtn
           handleReviewSubmit={this.handleReviewSubmit}
@@ -392,15 +437,8 @@ class Business extends React.Component {
           reviewsSummary={this.state.business.reviewsSummary}
           authenticated={this.state.authenticated}
           user_id={this.state.user_id}
-          handleUpload={this.handleUpload}
           handleInputChange={this.handleInputChange}
           handleReviewDelete={this.handleReviewDelete} />
-        <Images
-          images={this.state.images}
-          authenticated={this.state.authenticated}
-          user_id={this.state.user_id}
-          handleImageDelete={this.handleImageDelete}
-          handleImageUpdate={this.handleImageUpdate} />
       </div>
     )
   }

@@ -12,6 +12,27 @@ class Api::BusinessesController < ApplicationController
     @business = Business.find_by(id: params[:id])
     @images = Image.where(business_id: params[:id])
     @reviews = Review.where(business_id: params[:id]).order(created_at: :desc)
+
+    # get session/user info to edit a business
+    user = nil
+    token = cookies.signed[:diner_session_token]
+    session = Session.find_by(token: token)
+    @userInfo = nil
+    if session
+      user = session.user
+      isOwner = @business.user_id == user.id
+      @userInfo = {
+        loggedIn: true,
+        user: user,
+        isOwner: isOwner
+      }
+    else
+      @userInfo = {
+        loggedIn: false,
+        user: 'not logged in'
+      }
+    end
+
     return render json: { error: 'not_found' }, status: :not_found if !@business
     render 'api/businesses/show', status: :ok
   end
@@ -33,14 +54,21 @@ class Api::BusinessesController < ApplicationController
   def update
     token = cookies.signed[:diner_session_token]
     session = Session.find_by(token: token)
-    user = session.user
+    if session
+      user = session.user
+    else
+      return render json: {message: 'must be logged in'}, status: :forbidden
+    end
 
     @business = Business.find_by(id: params[:id])
 
     return render json: {message: 'not authorized'}, status: :forbidden if @business.user_id != user.id
 
     return render 'not_found', status: :not_found if not @business
-    return render 'bad_request', status: :bad_request if not @business.update(business_params)
+    return render json: {
+      message: 'error updating',
+      # error: error
+    }, status: :bad_request if not @business.update(business_params)
     render 'show', status: :ok
   end
 
@@ -89,10 +117,7 @@ class Api::BusinessesController < ApplicationController
       filtered.push(@city).push(@state)
       @businesses = filtered
     end
-    render json: {
-      params: @params,
-      businesses: @businesses
-    }
+    render 'api/businesses/search', status: :ok
   end
 
   def categories
@@ -141,6 +166,6 @@ class Api::BusinessesController < ApplicationController
   def business_params
     params
       .require(:business)
-      .permit(:name, :address, :city, :state, :zipcode, :phone, :website, :categories, :user, :ratings, images: [])
+      .permit(:name, :address, :city, :state, :zipcode, :phone, :website, :categories, :user, :ratings, :primary_photo_id, :primary_photo, images: [])
   end
 end

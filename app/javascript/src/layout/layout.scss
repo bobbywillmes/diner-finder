@@ -8,3 +8,8 @@ body {
     background: red;
   }
 }
+
+// ensure the contentWrap is at-least full height, minus the header & footer heights
+.contentWrap {
+  min-height: calc(100vh - 70px - 70px);
+}

@@ -1,6 +1,9 @@
 json.business do
   json.id               @business.id
   json.name             @business.name
+  json.primaryPhoto     @business.primaryPhoto
+  json.userInfo         @userInfo
+
   json.address          @business.address
   json.city             @business.city
   json.state            @business.state
@@ -17,6 +20,7 @@ json.business do
     json.array! @images do |image|
       json.id           image.id
       json.user_id      image.user_id
+      json.date         image.created_at
       json.description  image.description
       json.category     image.category
       json.review_id    image.review_id

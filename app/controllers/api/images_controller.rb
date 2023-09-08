@@ -15,6 +15,10 @@ class Api::ImagesController < ApplicationController
     @image.review = review
 
     if @image.save
+      if !business.primary_photo_id
+        business.primary_photo_id = @image.id
+        business.save
+      end
       render 'api/images/show', status: :created
     else
       render json: {err: @image.errors, error: 'unable to upload image :('}
@@ -44,6 +48,13 @@ class Api::ImagesController < ApplicationController
     return render json: { success: false, message: 'User not logged in.' }, status: 401 unless session
 
     image = Image.find_by(id: params[:id])
+
+    # return error if image is primary photo for a biz
+    return render json: {
+      isPrimaryKey: true,
+      message: 'Cannot delete image because it\'s the primary image for the business.'
+    }, status: :forbidden if @business = Business.find_by(primary_photo_id: params[:id])
+
     if image.destroy
       render json: {
         success: true,

@@ -14,6 +14,14 @@ export function getBusiness(id) {
   })
 }
 
+export function updateBusiness(id, data) {
+  return axios({
+    method: 'patch',
+    url: `/api/biz/${id}`,
+    data: data
+  })
+}
+
 export function uploadPhoto(bizId, data) {
   return axios({
     method: 'post',

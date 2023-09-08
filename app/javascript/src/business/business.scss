@@ -1,3 +1,28 @@
+#business {
+  position: relative;
+}
+
+#primaryPhoto {
+  position: absolute;
+  right: 0;
+  top: 0;
+  img {
+    max-width: 500px;
+    max-height: 500px;
+  }
+  > .btn {
+    position: absolute;
+    bottom: 10%;
+    right: 10%;
+    color: black;
+    background: white;
+    border: 1px solid black;
+  }
+  > .btn:hover {
+    background: #ccc;
+  }
+}
+
 .container .image {
   border: 2px solid red;
   padding: 1rem;
@@ -9,6 +34,43 @@
   }
 }
 
-#postReviewBtn {
+#postReviewBtn,
+#uploadPhotoBtn {
   background-color: red;
+}
+
+#galleryModal {
+  width: 90% !important;
+  max-width: unset;
+  .modal-content {
+    height: 90vh;
+  }
+}
+
+#galleryWrap {
+  height: 100%;
+}
+
+#editorModal {
+  width: 90% !important;
+  max-width: unset;
+  .modal-content {
+    height: 90vh;
+  }
+}
+
+#editorWrap {
+  height: 100%;
+}
+
+#uploadPhotoModal {
+  width: 90% !important;
+  max-width: unset;
+  .modal-content {
+    height: 90vh;
+  }
+}
+
+#uploadPhotoWrap {
+  height: 100%;
 }

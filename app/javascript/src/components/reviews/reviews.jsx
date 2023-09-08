@@ -218,7 +218,7 @@ class Reviews extends React.Component {
         <AvgRating reviewsSummary={this.props.reviewsSummary} />
         {this.props.reviews.map(review => {
           return (
-            <Review key={review.id} review={review} user_id={this.props.user_id} handleUpload={this.props.handleUpload} handleInputChange={this.props.handleInputChange} handleReviewDelete={this.props.handleReviewDelete} />
+            <Review key={review.id} review={review} user_id={this.props.user_id} handleReviewDelete={this.props.handleReviewDelete} />
           )
         })}
       </div>

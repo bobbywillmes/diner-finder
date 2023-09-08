@@ -23,7 +23,6 @@ export function Categories(props) {
 }
 
 export function resizeImage(img) {
-  console.log('resizeImage()  utils.js')
   return new Promise((resolve) => {
     Resizer.imageFileResizer(
       img,

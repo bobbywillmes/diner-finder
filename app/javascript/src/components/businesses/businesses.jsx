@@ -4,11 +4,16 @@ import { AvgRating } from '../rating/rating'
 
 function Business(props) {
   return (
-    <div className="business">
-      <h2><a href={`/biz/${props.business.id}`}>{props.business.name}</a></h2>
-      <h5>{props.business.city}, {props.business.state}</h5>
-      <Categories categories={props.business.categories} />
-      <AvgRating reviewsSummary={props.business.reviewsSummary} />
+    <div className="business row">
+      <div className="imgWrap col-3">
+        <img src={props.business.primaryPhoto.url} alt="" />
+      </div>
+      <div className="col-9">
+        <h2><a href={`/biz/${props.business.id}`}>{props.business.name}</a></h2>
+        <h5>{props.business.city}, {props.business.state}</h5>
+        <Categories categories={props.business.categories} />
+        <AvgRating reviewsSummary={props.business.reviewsSummary} />
+      </div>
     </div>
   )
 }
