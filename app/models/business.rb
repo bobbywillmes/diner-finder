@@ -32,7 +32,7 @@ class Business < ApplicationRecord
     else
       @primaryPhoto = {
         isPlaceholder: true,
-        url: '/assets/nophoto.png'
+        url: ActionController::Base.helpers.asset_path('nophoto.png', disposition: 'attachment', only_path: true)
       }
     end
     return @primaryPhoto
