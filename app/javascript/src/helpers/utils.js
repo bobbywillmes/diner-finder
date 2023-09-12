@@ -9,16 +9,18 @@ export function parseCategories(text) {
 }
 
 export function Categories(props) {
-  let str = '';
   let splitter = '';
   return (
-    props.categories.map((category, index) => {
-      if (index > 0) { splitter = ', ' }
-      str = <a href={`/search?q=${category}`}>{splitter} {category}</a>
-      return (
-        <span key={index}>{str}</span>
-      )
-    })
+    <div className="categories">
+      {props.categories.map((category, index) => {
+        if (index > 0) { splitter = ', ' }
+        return (
+          <React.Fragment key={index}>
+            {splitter}<a href={`/search?keyword=${category}`}>{category}</a>
+          </React.Fragment>
+        )
+      })}
+    </div>
   )
 }
 

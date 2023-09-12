@@ -2,8 +2,13 @@ class Api::BusinessesController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def index
-    @businesses = Business.order(created_at: :asc).page(params[:page]).per(10)
-    # @businesses = Business.order(Arel.sql('RANDOM()')).page(params[:page]).per(10)
+    # if location is set on frontend localStorage, get businesses for that location, otherwise (location not set or set to all locations) return all businesses
+    if params[:location] != 'All locations'
+        @businesses = Business.where("city LIKE ?", "%" + params[:location] + "%").page(params[:page]).per(10)
+    else
+      @businesses = Business.order(created_at: :asc).page(params[:page]).per(10)
+      # @businesses = Business.order(Arel.sql('RANDOM()')).page(params[:page]).per(10)
+    end
     return render json: { error: 'not_found' }, status: :not_found if !@businesses
     render 'api/businesses/index', status: :ok
   end
@@ -84,38 +89,58 @@ class Api::BusinessesController < ApplicationController
     @businesses = Business.all
     isKeyword = false
     isLocation = false
-    # if search is specific to type (categories = breakfast), filter where key = value
+    keyword = nil
+    location = nil
+    # loop through params to determine how to filter for results (keyword and/or location)
     @params.each { |key, value|
       # puts "k: #{key}, v: #{value}"
       if key == 'keyword'
         isKeyword = true
+        keyword = params[:keyword]
+        keyword = keyword.downcase
       end
-      break if isKeyword
       if key == 'location'
         isLocation = true
+        location = params[:location]
       end
-      break if isLocation
-      @businesses = @businesses.where("#{key} LIKE ?", "%" + value[0] + "%")
     }
-    # else, search is by keyword, filter businesses by name & category
+
+    # filter by keyword (name or category) & location
+    if isKeyword && isLocation
+      @allBusinesses = Business.all
+      filtered = []
+      # first get all businesses that match location, then filter both name & category by the keyword.
+      @location = @allBusinesses.where("city LIKE ?", "%" + location + "%")
+      @name = @location.where("LOWER(name) LIKE ?", "%" + keyword + "%")
+      @category = @location.where("LOWER(categories) LIKE ?", "%" + keyword + "%")
+      # push results to filtered array, flatten it & remove duplicates
+      filtered.push(@name).push(@category)
+      @businesses = filtered.flatten.uniq
+      @keyword = keyword
+      @location = location
+      return render 'api/businesses/search', status: :ok
+    end
+
+    # if search is by keyword, filter businesses by name & category
     if isKeyword
-      keyword = @params["keyword"][0]
-      keyword = keyword.downcase
       @allBusinesses = Business.all
       filtered = []
       @name = @allBusinesses.where("LOWER(name) LIKE ?", "%" + keyword + "%")
       @category = @allBusinesses.where("LOWER(categories) LIKE ?", "%" + keyword + "%")
       filtered.push(@name).push(@category)
       @businesses = filtered.flatten.uniq
+      @keyword = keyword
     end
+
+    # if search is by location, filter businesses by city & state
     if isLocation
-      location = @params["location"][0]
       @allBusinesses = Business.all
       filtered = []
       @city = @allBusinesses.where("city LIKE ?", "%" + location + "%")
       @state = @allBusinesses.where("state LIKE ?", "%" + location + "%")
       filtered.push(@city).push(@state)
-      @businesses = filtered
+      @businesses = filtered.flatten.uniq
+      @location = location
     end
     render 'api/businesses/search', status: :ok
   end

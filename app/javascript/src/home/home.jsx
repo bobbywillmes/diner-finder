@@ -9,7 +9,8 @@ class Home extends React.Component {
   }
 
   componentDidMount() {
-    getBusinesses()
+    const location = localStorage.location ? localStorage.location : '';
+    getBusinesses(location)
       .then(res => {
         if (res.status === 200) {
           res.data.businesses.forEach(business => {

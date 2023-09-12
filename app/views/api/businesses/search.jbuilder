@@ -9,3 +9,5 @@ json.businesses do
     json.primaryPhoto        business.primaryPhoto
   end
 end
+json.keyword        @keyword
+json.location       @location

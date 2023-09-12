@@ -1,8 +1,9 @@
 import axios from "axios";
 
 export function submitSearch(query) {
+  const url = '/api/search' + query;
   return axios({
     method: 'get',
-    url: `/api/search?keyword=${query}`
+    url: url
   })
 }

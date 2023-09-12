@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-export function getBusinesses() {
+export function getBusinesses(location) {
   return axios({
     method: 'get',
-    url: '/api/biz'
+    url: `/api/biz/?location=${location}`
   })
 }
 
@@ -64,5 +64,12 @@ export function deleteReview(id) {
   return axios({
     method: 'delete',
     url: `/api/reviews/${id}`
+  })
+}
+
+export function getLocations() {
+  return axios({
+    method: 'get',
+    url: '/api/locations'
   })
 }
