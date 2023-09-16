@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Button, Form, Alert } from 'react-bootstrap';
+import { Button, Form } from 'react-bootstrap';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './review.scss';
-import { uploadPhoto, updatePhotoDetails } from '../../../api/business';
-import { resizeImage } from '../../helpers/utils';
 
 const StarRating = (props, { value }) => {
-  const [rating, setRating] = React.useState(parseInt(value) || 0);
-  const [selection, setSelection] = React.useState(0);
+  const [rating, setRating] = useState(parseInt(value) || 0);
+  const [selection, setSelection] = useState(0);
 
   const hoverOver = event => {
     let val = 0;
@@ -47,28 +45,6 @@ const StarRating = (props, { value }) => {
   );
 }
 
-function SuccessAlert(props) {
-  const [show, setShow] = useState(true);
-
-  if (props.updated) {
-    setTimeout(() => {
-      setShow(false)
-    }, 2000)
-  }
-
-  return (
-    <>
-      <Alert show={show} variant="success" className="update-alert" onClose={() => setShow(false)} dismissible>
-        <Alert.Heading>Success!</Alert.Heading>
-        <p>
-          Photo details updated.
-        </p>
-      </Alert>
-
-    </>
-  )
-}
-
 class SlideOne extends React.Component {
   constructor(props) {
     super(props)
@@ -104,7 +80,6 @@ class SlideOne extends React.Component {
 class SlideTwo extends React.Component {
   constructor(props) {
     super(props)
-
     this.state = {
       image: null,
       resizedImage: null,
@@ -124,10 +99,15 @@ class SlideTwo extends React.Component {
     this.props.handleUpload(this.state.image)
       .then(res => {
         if (res.status === 201) {
-          let newImages = this.state.newImages
-          newImages.push(res.data.image)
-          this.setState({ newImages: newImages })
+          let newImages = this.state.newImages;
+          newImages.push(res.data.image);
+          this.setState({ newImages: newImages });
+          const uploadForm = document.querySelector('#imageUpload');
+          uploadForm.value = null;
         }
+      })
+      .catch(err => {
+        console.log(err);
       })
   }
 
@@ -153,9 +133,8 @@ class SlideTwo extends React.Component {
               <div>
                 <p>New Images</p>
                 {this.state.newImages.map(image => {
-                  console.log(image)
                   return (
-                    <img key={image.id} src={image.url} alt="" />
+                    <img key={image.id} src={image.src} alt="" />
                   )
                 })}
                 <br /><br />
@@ -188,35 +167,23 @@ class ImageDetails extends React.Component {
   }
 
   handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  }
-
-  handleImageUpdate = (imageId, description, category) => {
     this.setState({ updated: false })
-    // build formdata to update image info(description & category), send to API & return as a promise
-    let formData = new FormData();
-    formData.append('image[description]', description);
-    formData.append('image[category]', category);
-    return new Promise((resolve, reject) => {
-      updatePhotoDetails(imageId, formData)
-        .then(res => {
-          console.log(res)
-          if (res.status === 200) {
-            this.setState({ updated: true })
-            resolve({ resolved: true })
-          } else {
-            reject({ resolved: false })
-          }
-        })
-    })
+    this.setState({ [e.target.name]: e.target.value });
   }
 
   handleSubmit = (e) => {
     e.preventDefault()
-    this.handleImageUpdate(this.props.image.id, this.state.description, this.state.category)
+    let data = {
+      description: this.state.description,
+      category: this.state.category
+    }
+    this.props.handleImageUpdate(this.props.image.id, data)
       .then(res => {
-        console.log(res)
+        if (res.status === 200) {
+          this.setState({ updated: true })
+        }
       })
+      .catch(err => console.log(err))
   }
 
   render() {
@@ -225,7 +192,7 @@ class ImageDetails extends React.Component {
         {this.props.index > 0 ? <hr /> : ''}
         <div className="row">
           <div className="col-5">
-            <img src={this.props.image.url} alt="" />
+            <img src={this.props.image.src} alt="" />
           </div>
           <div className="col-7">
             <div id="imageEdit">
@@ -246,10 +213,10 @@ class ImageDetails extends React.Component {
                   </select>
                 </div>
                 <button type="submit" className="btn btn-primary">Submit</button>
+                {this.state.updated ?
+                  <span className="saved"> <FontAwesomeIcon className="saved-icon" icon={['fas', 'circle-check']} />  Image details saved</span>
+                  : ''}
               </form>
-              {this.state.updated &&
-                <SuccessAlert updated={this.state.updated} />
-              }
             </div>
           </div>
         </div>
@@ -271,11 +238,15 @@ class SlideThree extends React.Component {
         {this.props.newImages.map((image, index) => {
           return (
             <div key={image.id}>
-              <ImageDetails image={image} index={index} />
+              <ImageDetails
+                image={image}
+                index={index}
+                handleImageUpdate={this.props.handleImageUpdate}
+              />
             </div>
           )
         })}
-        <button className="btn btn-secondary" onClick={this.handleClose}>Close</button>
+        <button id="closeBtn" className="btn btn-secondary" onClick={this.handleClose}>Close</button>
       </div>
     )
   }
@@ -318,6 +289,7 @@ class NewReview extends React.Component {
       <SlideThree
         newImages={this.state.newImages}
         handleClose={this.props.handleClose}
+        handleImageUpdate={this.props.handleImageUpdate}
       />
     ]
   }
@@ -333,39 +305,21 @@ class NewReview extends React.Component {
 
   handleUpload = (image) => {
     return new Promise((resolve, reject) => {
-      console.log(image)
-      console.log(this.state)
-      let formData = new FormData()
-      resizeImage(image)
+      this.props.uploadNewImage(image, this.state.review_Id)
         .then(res => {
-          console.log(res)
-          console.log(this.props)
-          this.setState({ resizedImage: res })
-          console.log(this.state)
-          formData.append('image[image]', res)
-          formData.append('image[business_id]', this.props.business_id)
-          formData.append('image[user_id]', this.props.user_id)
-          formData.append('image[review_id]', this.state.review_Id)
-          uploadPhoto(this.props.business_id, formData)
-            .then(res => {
-              console.log(res)
-              if (res.status === 201) {
-                console.log('image uploaded!')
-                console.log(res)
-                let newImages = this.state.newImages
-                newImages.push(res.data.image)
-                this.setState({ newImages: newImages })
-                console.log(this.state)
-                const uploadForm = document.querySelector('#imageUpload')
-                uploadForm.value = null
-                resolve(res)
-                // this.props.alert.success('Image uploaded!')
-              }
-            })
-            .catch(err => {
-              console.log(err)
-              reject(err)
-            })
+          if (res.status === 201) {
+            let newImages = this.state.newImages
+            newImages.push(res.data.image)
+            this.setState({ newImages: newImages })
+            resolve(res);
+          } else {
+            console.log(res);
+            reject(res);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          reject(err);
         })
     })
   }

@@ -257,7 +257,7 @@ function Image(props) {
   return (
     <div id="image" className="row">
       <div className="col-8 imageCol">
-        <img src={image.url} alt="" />
+        <img src={image.src} alt="" />
         <ImageButtons
           index={props.index}
           imagesLength={props.imagesLength}
@@ -395,7 +395,7 @@ function Thumbnail(props) {
 
   return (
     <img
-      src={image.url}
+      src={image.src}
       alt={image.description}
       data-category={image.category}
       onClick={clickImage}

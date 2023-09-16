@@ -3,9 +3,8 @@
 }
 
 #primaryPhoto {
-  position: absolute;
-  right: 0;
-  top: 0;
+  position: relative;
+  float: right;
   img {
     max-width: 500px;
     max-height: 500px;

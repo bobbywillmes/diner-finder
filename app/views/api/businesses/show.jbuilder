@@ -15,6 +15,10 @@ json.business do
   json.created_at       @business.created_at
   json.updated_at       @business.updated_at
   json.reviewsSummary   @business.reviewsSummary
+  json.price            @business.price
+  json.about            @business.about
+  json.history          @business.history
+  json.hours            @hours
   
   json.images do
     json.array! @images do |image|
@@ -26,7 +30,7 @@ json.business do
       json.review_id    image.review_id
       json.userName     image.user.name
       json.userLocation image.user.location
-      json.url          url_for(image.image)
+      json.src          url_for(image.image)
     end
   end
 

@@ -7,5 +7,5 @@ json.image do
   json.userName       @image.user.name
   json.userLocation   @image.user.location
   json.date           @image.created_at
-  json.url            url_for(@image.image)
+  json.src            url_for(@image.image)
 end

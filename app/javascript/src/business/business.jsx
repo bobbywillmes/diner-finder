@@ -10,7 +10,7 @@ import PhotoUpload from '../components/photoUpload/photoUpload';
 import { apiAuthenticated } from '../../api/user';
 import { Categories, parseCategories, resizeImage } from '../helpers/utils';
 import { withAlert } from 'react-alert';
-import { Button, Modal } from 'react-bootstrap';
+import { Button, Modal, Tooltip, OverlayTrigger } from 'react-bootstrap';
 
 function PhotoGalleryBtn(props) {
   // button to show modal with Gallery component
@@ -52,6 +52,12 @@ function UploadPhotoBtn(props) {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  if (!props.authenticated) {
+    return (
+      <a href='/login'>Login to upload photos.</a>
+    )
+  }
+
   return (
     <>
       <Button id="uploadPhotoBtn" onClick={handleShow}>Upload Photos</Button>
@@ -62,7 +68,7 @@ function UploadPhotoBtn(props) {
         <Modal.Body>
           <div id="uploadPhotoWrap">
             <PhotoUpload
-              handleUpload={props.handleUpload}
+              uploadNewImage={props.uploadNewImage}
               handleImageUpdate={props.handleImageUpdate}
               handleClose={handleClose}
             />
@@ -79,6 +85,12 @@ function PostReviewBtn(props) {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  if (!props.authenticated) {
+    return (
+      <a href='/login'>Login to post a review.</a>
+    )
+  }
+
   return (
     <>
       <Button id="postReviewBtn" onClick={handleShow}>
@@ -93,7 +105,10 @@ function PostReviewBtn(props) {
             handleReviewSubmit={props.handleReviewSubmit}
             business_id={props.business_id}
             user_id={props.user_id}
-            handleClose={handleClose} />
+            handleClose={handleClose}
+            uploadNewImage={props.uploadNewImage}
+            handleImageUpdate={props.handleImageUpdate}
+          />
         </Modal.Body>
       </Modal>
     </>
@@ -139,13 +154,13 @@ function PrimaryPhoto(props) {
   } else if (props.photo.isPlaceholder) {
     return (
       <div id="primaryPhoto">
-        <img src={props.photo.url} alt="" />
+        <img src={props.photo.src} alt="" />
       </div>
     )
   } else {
     return (
       <div id="primaryPhoto">
-        <img src={props.photo.url} alt="" />
+        <img src={props.photo.src} alt="" />
         <PhotoGalleryBtn
           images={props.images}
           bizName={props.bizName}
@@ -190,6 +205,97 @@ function EditBusinessBtn(props) {
   )
 }
 
+function About(props) {
+  if (!props.about) {
+    return
+  }
+  return (
+    <div id="about">
+      <h3>About</h3>
+      <p>{props.about}</p>
+      {props.history ?
+        <>
+          <h3>History</h3>
+          <p>{props.history}</p>
+        </>
+        : <div></div>}
+    </div>
+  )
+}
+
+function Hours(props) {
+  const date = new Date();
+  const day = date.getDay();
+  if (!props.hours) {
+    return
+  }
+  return (
+    <div id="hours">
+      <h3>Hours of operation</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Day of Week</th>
+            <th>Hours of Operation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Monday</td>
+            <td>{props.hours.Mon} {day == 1 ? <span>(Today)</span> : ''}</td>
+          </tr>
+          <tr>
+            <td>Tuesday</td>
+            <td>{props.hours.Tue} {day == 2 ? <span>(Today)</span> : ''}</td>
+          </tr>
+          <tr>
+            <td>Wednesday</td>
+            <td>{props.hours.Wed} {day == 3 ? <span>(Today)</span> : ''}</td>
+          </tr>
+          <tr>
+            <td>Thursday</td>
+            <td>{props.hours.Thu} {day == 4 ? <span>(Today)</span> : ''}</td>
+          </tr>
+          <tr>
+            <td>Friday</td>
+            <td>{props.hours.Fri} {day == 5 ? <span>(Today)</span> : ''}</td>
+          </tr>
+          <tr>
+            <td>Saturday</td>
+            <td>{props.hours.Sat} {day == 6 ? <span>(Today)</span> : ''}</td>
+          </tr>
+          <tr>
+            <td>Sunday</td>
+            <td>{props.hours.Sun} {day == 0 ? <span>(Today)</span> : ''}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function Price(props) {
+  const renderTooltip = (props) => (
+    <Tooltip id="button-tooltip" {...props}>
+      (Price scaled one to four)
+    </Tooltip>
+  );
+
+  return (
+    <div>
+      <OverlayTrigger
+        placement="top"
+        delay={{ show: 0, hide: 1000 }}
+        overlay={renderTooltip}
+      >
+        <span style={{ textDecoration: 'underline dotted', fontWeight: 'bold' }}>Price:</span>
+      </OverlayTrigger>
+      &nbsp;
+      {props.price}
+    </div>
+  );
+}
+
 class Business extends React.Component {
   state = {
     business: {},
@@ -202,29 +308,8 @@ class Business extends React.Component {
   }
 
   componentDidMount() {
-    getBusinessData(this.props.id)
-      .then(res => {
-        const business = res.business;
-        this.setState({ business: business })
-        this.setState({ images: business.images })
-        if (business.userInfo.isOwner) {
-          this.setState({ isBusinessOwner: true })
-        }
-        parseCategories(business.categories)
-          .then(res => this.setState({ categories: res }))
-        document.title = this.state.business.name
-      })
-
-    getReviews(this.props.id)
-      .then(res => {
-        if (res.status === 200) {
-          this.setState({ reviews: res.data.reviews })
-        }
-        else {
-          console.log('error getting reviews')
-          console.log(res)
-        }
-      })
+    this.getBusinessData()
+    this.getReviews()
 
     checkIfAuthenticated()
       .then(res => {
@@ -233,23 +318,77 @@ class Business extends React.Component {
           this.setState({ user_id: res.user_id });
         }
       })
+      .catch(err => {
+        console.log(err)
+        return
+      })
   }
 
-  handleUpload = (image) => {
+  getBusinessData = () => {
+    getBusinessData(this.props.id)
+      .then(res => {
+        console.log(res.business);
+        const business = res.business;
+        this.setState({ business: business })
+        this.setState({ images: business.images })
+        if (business.userInfo.isOwner) {
+          this.setState({ isBusinessOwner: true })
+        }
+        parseCategories(business.categories)
+          .then(res => this.setState({ categories: res }))
+        document.title = res.business.name;
+      })
+  }
+
+  getReviews = () => {
+    getReviews(this.props.id)
+      .then(res => {
+        if (res.status === 200) {
+          // console.log(res.data);
+          this.setState({ reviews: res.data.reviews })
+        }
+        else {
+          console.log('error getting reviews')
+          console.log(res)
+        }
+      })
+  }
+
+  uploadNewImage = (image, reviewId) => {
+    console.log(`Business   uploadNewImage()   reviewId: ${reviewId}`);
     return new Promise((resolve, reject) => {
       resizeImage(image)
         .then(res => {
           let formData = new FormData();
           formData.append('image[image]', res)
           formData.append('image[user_id]', this.state.user_id)
+          if (reviewId) {
+            formData.append('image[review_id]', reviewId)
+          }
           uploadPhoto(this.state.business.id, formData)
             .then(res => {
-              this.updateImagesState(res.data.image)
+              if (res.status === 201) {
+                this.updateImagesState(res.data.image)
+                if (reviewId) {
+                  this.addNewImageToNewReview(res.data.image, reviewId)
+                }
+              }
               resolve(res)
             })
+            .catch(err => reject(err))
         })
         .catch(err => reject(err))
     })
+  }
+
+  addNewImageToNewReview = (image, reviewId) => {
+    // get reviews, find the review, add the new image, setState all reviews
+    let reviews = this.state.reviews;
+    let review = reviews.filter(review => { return review.id == reviewId })
+    review = review[0];
+    review.images.push(image);
+    reviews.splice(0, 1, review);
+    this.setState({ reviews: reviews });
   }
 
   handleInputChange = (e) => {
@@ -342,7 +481,16 @@ class Business extends React.Component {
     })
   }
 
+  removeImagesFromState = (images) => {
+    // build array of image ids to remove, then filter this.state.images that don't match those ids
+    let idsToRemove = [];
+    images.forEach(image => idsToRemove.push(image.id));
+    let filteredImages = this.state.images.filter(img => idsToRemove.indexOf(img.id) === -1);
+    this.setState({ images: filteredImages });
+  }
+
   handleReviewDelete = (reviewId) => {
+    const review = this.state.reviews.filter(review => review.id == reviewId)[0];
     deleteReview(reviewId)
       .then(res => {
         if (res.status === 200) {
@@ -352,6 +500,9 @@ class Business extends React.Component {
             return review.id !== reviewId
           })
           this.setState({ reviews: newReviews })
+          if (review.images.length > 0) {
+            this.removeImagesFromState(review.images)
+          }
         }
       })
   }
@@ -420,25 +571,36 @@ class Business extends React.Component {
         <p>{this.state.business.address} {this.state.business.city}, {this.state.business.state}</p>
         <Categories categories={this.state.categories} />
         <p>{this.state.business.phone}</p>
-        <p><a href={this.state.business.website} target="_blank">{this.state.business.website}</a></p>
+        <p><a href={`http://${this.state.business.website}`} target="_blank">{this.state.business.website}</a></p>
+        <br />
+        <Price price={this.state.business.price} />
+        <br />
+        <About about={this.state.business.about} history={this.state.business.history} />
+        <Hours hours={this.state.business.hours} />
         <br />
         <UploadPhotoBtn
           business={this.state.business}
-          handleUpload={this.handleUpload}
+          uploadNewImage={this.uploadNewImage}
           handleImageUpdate={this.handleImageUpdate}
+          authenticated={this.state.authenticated}
         />
         <h1>Reviews</h1>
         <PostReviewBtn
           handleReviewSubmit={this.handleReviewSubmit}
           user_id={this.state.user_id}
-          business_id={this.state.business.id} />
+          business_id={this.state.business.id}
+          authenticated={this.state.authenticated}
+          uploadNewImage={this.uploadNewImage}
+          handleImageUpdate={this.handleImageUpdate}
+        />
         <Reviews
           reviews={this.state.reviews}
           reviewsSummary={this.state.business.reviewsSummary}
           authenticated={this.state.authenticated}
           user_id={this.state.user_id}
           handleInputChange={this.handleInputChange}
-          handleReviewDelete={this.handleReviewDelete} />
+          handleReviewDelete={this.handleReviewDelete}
+        />
       </div>
     )
   }

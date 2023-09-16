@@ -27,12 +27,12 @@ class Business < ApplicationRecord
         business_id: primaryPhoto.business_id,
         description: primaryPhoto.description,
         category: primaryPhoto.category,
-        url: url_for(primaryPhoto.image)
+        src: url_for(primaryPhoto.image)
       }
     else
       @primaryPhoto = {
         isPlaceholder: true,
-        url: ActionController::Base.helpers.asset_path('nophoto.png', disposition: 'attachment', only_path: true)
+        src: ActionController::Base.helpers.asset_path('nophoto.png', disposition: 'attachment', only_path: true)
       }
     end
     return @primaryPhoto

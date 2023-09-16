@@ -8,6 +8,9 @@ class Api::ImagesController < ApplicationController
     business = Business.find_by(id: params[:id])
     business_id = params[:id]
     review = Review.find_by(id: params[:image][:review_id])
+    if review
+      @review_id = review.id
+    end
 
     @image = Image.new(image_params)
     @image.business = business

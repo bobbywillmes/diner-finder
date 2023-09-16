@@ -10,7 +10,7 @@ function Images(props) {
         <h3>New Images</h3>
         {props.newImages.map(image => {
           return (
-            <img src={image.url} key={image.id} alt="" />
+            <img src={image.src} key={image.id} alt="" />
           )
         })}
       </div>
@@ -98,7 +98,7 @@ function ImageDetails(props) {
   return (
     <div className="row imageDetails" key={image.id}>
       <div className="col-4">
-        <img src={image.url} alt="" />
+        <img src={image.src} alt="" />
       </div>
       <div className="col-8">
         <form onSubmit={handleSubmit}>
@@ -183,7 +183,7 @@ class PhotoUpload extends Component {
     // loop through (new) images, upload each image, then if it's the last image resolve the Promise with all new images.
     return new Promise((resolve, reject) => {
       images.forEach((image, index) => {
-        this.props.handleUpload(image)
+        this.props.uploadNewImage(image)
           .then(res => {
             if (res.status === 201) {
               newImages.push(res.data.image);

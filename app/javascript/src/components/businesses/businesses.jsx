@@ -6,7 +6,7 @@ function Business(props) {
   return (
     <div className="business row">
       <div className="imgWrap col-3">
-        <img src={props.business.primaryPhoto.url} alt="" />
+        <img src={props.business.primaryPhoto.src} alt="" />
       </div>
       <div className="col-9">
         <h2><a href={`/biz/${props.business.id}`}>{props.business.name}</a></h2>

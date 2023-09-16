@@ -6,5 +6,6 @@ json.image do
   json.user_id        @image.user_id
   json.userName       @image.user.name
   json.userLocation   @image.user.location
-  json.url            url_for(@image.image)
+  json.review_id      @review_id
+  json.src            url_for(@image.image)
 end

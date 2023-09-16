@@ -75,6 +75,9 @@
   hr {
     height: 3px;
   }
+  #closeBtn {
+    margin-top: 1rem;
+  }
 }
 
 #starRating {
@@ -92,6 +95,16 @@
 
 #imageEdit {
   position: relative;
+  form {
+    padding: 1rem;
+  }
+  button {
+    margin-top: 1rem;
+  }
+  .saved {
+    margin-left: 1rem;
+    color: green;
+  }
 }
 
 .update-alert {

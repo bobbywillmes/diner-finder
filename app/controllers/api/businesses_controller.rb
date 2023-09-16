@@ -17,6 +17,9 @@ class Api::BusinessesController < ApplicationController
     @business = Business.find_by(id: params[:id])
     @images = Image.where(business_id: params[:id])
     @reviews = Review.where(business_id: params[:id]).order(created_at: :desc)
+    @hoursStr = @business.hours.gsub! '\{', '{'    # remove \ before {
+    @hoursStr = @hoursStr.gsub! '\}', '}'           # remove \ before }
+    @hours = JSON.parse @hoursStr
 
     # get session/user info to edit a business
     user = nil
