@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-export function getBusinesses(location) {
+export function getBusinesses(location, page) {
   return axios({
     method: 'get',
-    url: `/api/biz/?location=${location}`
+    url: `/api/biz/?location=${location}&page=${page}`
   })
 }
 
