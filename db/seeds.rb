@@ -5,6 +5,7 @@
 #
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
+require 'faker'
 
 users = User.create([
   {name: 'Ally',email: 'ally@example.com',password: 'password',location: 'Truckee, CA'},
@@ -533,3 +534,29 @@ businesses = Business.create([
   {name:'STK Steakhouse',website:'stksteakhouse.com',address:'1550 Market St',city:'Denver',state:'CO',zipcode:'80202',phone:'(720) 597-8010',categories: ['Bars',' American (New)',' Steakhouses'],price:'$$$',hours:'\{"Mon":"11:00 AM - 11:00 PM","Tue":"11:00 AM - 11:00 PM","Wed":"11:00 AM - 11:00 PM","Thu":"11:00 AM - 11:00 PM","Fri":"11:00 AM - 12:00 AM (Next day)","Sat":"10:00 AM - 12:00 AM (Next day)","Sun":"10:00 AM - 11:00 PM"\}',about:'STK Denver artfully blends the modern steakhouse and a chic lounge into one, offering a dynamic fine dining experience with the superior quality of a traditional steakhouse. As one of the newest additions to the LoDo neighborhood of Denver, STK Denver distinguishes itself with a vibrant mix of stylish dining and lounge spaces, paired with a signature menu and world-class service.',user: User.find(9)},
   {name:'Cuba Cuba Cafe & Bar',website:'cubacubacafe.com',address:'1173 Delaware St',city:'Denver',state:'CO',zipcode:'80204',phone:'(303) 605-2822',categories: ['Cuban'],price:'$$',hours:'\{"Mon":"5:00 PM - 10:00 PM","Tue":"5:00 PM - 10:00 PM","Wed":"5:00 PM - 10:00 PM","Thu":"5:00 PM - 10:00 PM","Fri":"5:00 PM - 10:30 PM","Sat":"5:00 PM - 10:30 PM","Sun":"5:00 PM - 9:00 PM"\}',about:'cuba cuba cafe & bar specializes in all things Cuban. We are a family owned & operated restaurant & Rum bar. We have a lovely location nestled in the heart of the golden triangle. We have been described as a tropical oasis and a Caribbean escape. The entire experience will leave you craving more.',user: User.find(9)}
 ])
+
+def user
+  name = Faker::Name.name
+  email = Faker::Internet.email(name: name)
+  fake = Faker::Address
+  location = fake.city + ', ' + fake.state_abbr
+  return {name: name, password: 'password', email: email, location: location}
+end
+
+100.times do
+  User.create(user)
+end
+
+def review
+  text = Faker::Restaurant.review
+  rating = Faker::Number.within(range: 2..5)
+  randomUser = Faker::Number.within(range: 11..110)
+  user = User.find(randomUser)
+  randomBiz = Faker::Number.within(range: 1..500)
+  biz = Business.find(randomBiz)
+  return {text: text, rating: rating, user: user, business: biz}
+end
+
+5000.times do
+  Review.create(review)
+end

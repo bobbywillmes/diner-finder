@@ -153,14 +153,14 @@ class Api::BusinessesController < ApplicationController
     uniqueCategories = []
     # loop through each unique category array ["Breakfast & Brunch", "American (Traditional)"] for all businesses
     @categories.each do |category|
-      puts category
       # loop through each category "Breakfast & Brunch"
       next if category.blank?
       category = JSON.parse(category)
       category.each do |cat|
-        if !uniqueCategories.include? cat
-          # puts "uniqueCategories doesnt have cat: #{cat}"
-          uniqueCategories.push(cat)
+        catStr = cat.strip    # remove leading space
+        if !uniqueCategories.include? catStr
+          # puts "uniqueCategories doesnt have cat: #{catStr}"
+          uniqueCategories.push(catStr)
         end
       end
     end
