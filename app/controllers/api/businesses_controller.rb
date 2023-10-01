@@ -4,9 +4,9 @@ class Api::BusinessesController < ApplicationController
   def index
     # if location is set on frontend localStorage, get businesses for that location, otherwise (location not set or set to all locations) return all businesses
     if params[:location] != 'All locations'
-        @businesses = Business.where("city LIKE ?", "%" + params[:location] + "%").page(params[:page]).per(10)
+        @businesses = Business.order(id: :asc).where("city LIKE ?", "%" + params[:location] + "%").page(params[:page]).per(10)
     else
-      @businesses = Business.order(created_at: :asc).page(params[:page]).per(10)
+      @businesses = Business.order(id: :asc).page(params[:page]).per(10)
       # @businesses = Business.order(Arel.sql('RANDOM()')).page(params[:page]).per(10)
     end
     return render json: { error: 'not_found' }, status: :not_found if !@businesses
@@ -118,7 +118,7 @@ class Api::BusinessesController < ApplicationController
       @category = @location.where("LOWER(categories) LIKE ?", "%" + keyword + "%")
       # push results to filtered array, flatten it & remove duplicates
       filtered.push(@name).push(@category)
-      @businesses = filtered.flatten.uniq
+      @businesses = filtered.flatten.uniq.sort_by(&:name)
       @keyword = keyword
       @location = location
       return render 'api/businesses/search', status: :ok
@@ -131,7 +131,7 @@ class Api::BusinessesController < ApplicationController
       @name = @allBusinesses.where("LOWER(name) LIKE ?", "%" + keyword + "%")
       @category = @allBusinesses.where("LOWER(categories) LIKE ?", "%" + keyword + "%")
       filtered.push(@name).push(@category)
-      @businesses = filtered.flatten.uniq
+      @businesses = filtered.flatten.uniq.sort_by(&:name)
       @keyword = keyword
     end
 
@@ -142,7 +142,7 @@ class Api::BusinessesController < ApplicationController
       @city = @allBusinesses.where("city LIKE ?", "%" + location + "%")
       @state = @allBusinesses.where("state LIKE ?", "%" + location + "%")
       filtered.push(@city).push(@state)
-      @businesses = filtered.flatten.uniq
+      @businesses = filtered.flatten.uniq.sort_by(&:name)
       @location = location
     end
     render 'api/businesses/search', status: :ok
