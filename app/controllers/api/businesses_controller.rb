@@ -7,6 +7,7 @@ class Api::BusinessesController < ApplicationController
       @allBusinesses = Business.all
         page = params[:page] == 'undefined' ? 1: params[:page]
         location = params[:location]
+        location = location.downcase
         split = location.split(',')
         results = []
         if split.length == 2  # filter by city & state
