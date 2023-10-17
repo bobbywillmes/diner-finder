@@ -1,11 +1,9 @@
-#businesses {
-  border: 2px dotted dodgerblue;
-  .business {
-    border: 1px solid orange;
-    margin: 1rem;
-    img {
-      max-width: 250px;
-      max-height: 200px;
-    }
-  }
+#noResults {
+  text-align: center;
+}
+
+.iconWrap {
+  font-size: 100px;
+  text-align: center;
+  color: red;
 }

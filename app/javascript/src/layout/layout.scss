@@ -12,4 +12,34 @@ body {
 // ensure the contentWrap is at-least full height, minus the header & footer heights
 .contentWrap {
   min-height: calc(100vh - 70px - 70px);
+  max-width: 1320px;
+}
+
+#navbar {
+  border-bottom: 1px solid red;
+  box-shadow: 0 3px #ccc;
+  hr {
+    color: red !important;
+    height: 5px !important;
+  }
+}
+
+@media screen and (max-width: 992px) {
+  #searchInput,
+  #locationDropdown,
+  #locations,
+  #submit {
+    width: 100%;
+  }
+  .navbar-nav {
+    text-align: center;
+    a {
+      border: 1px solid black;
+      margin: 0.25rem 0;
+    }
+  }
+}
+
+.dropdown-toggle::after {
+  display: none !important;
 }

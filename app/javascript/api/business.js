@@ -7,6 +7,13 @@ export function getBusinesses(location, page) {
   })
 }
 
+export function searchBusinesses(query, page) {
+  return axios({
+    method: 'get',
+    url: `/api/search${query}&page=${page}`
+  })
+}
+
 export function getBusiness(id) {
   return axios({
     method: 'get',

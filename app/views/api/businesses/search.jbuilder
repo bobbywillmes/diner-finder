@@ -1,3 +1,7 @@
+json.total_pages @businesses.total_pages
+json.next_page @businesses.next_page
+json.total_count @businesses.total_count
+
 json.businesses do
   json.array! @businesses do |business|
     json.id                  business.id

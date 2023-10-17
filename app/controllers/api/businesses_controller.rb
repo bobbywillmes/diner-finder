@@ -3,11 +3,23 @@ class Api::BusinessesController < ApplicationController
 
   def index
     # if location is set on frontend localStorage, get businesses for that location, otherwise (location not set or set to all locations) return all businesses
-    if params[:location] != 'All locations'
-        @businesses = Business.order(id: :asc).where("city LIKE ?", "%" + params[:location] + "%").page(params[:page]).per(10)
+    if params[:location] != 'All locations' # has location
+      @allBusinesses = Business.all
+        page = params[:page] == 'undefined' ? 1: params[:page]
+        location = params[:location]
+        split = location.split(',')
+        results = []
+        if split.length == 2  # filter by city & state
+          city = split[0]
+          state = split[1].strip
+          results = Business.where("(LOWER(city) LIKE ? AND LOWER(state) LIKE ?)", "%" + city + "%", "%" + state + "%").page(page).per(10)
+        else  # filter by city or state
+          results = Business.where("LOWER(city) LIKE ? OR LOWER(state) LIKE ?", "%" + location + "%", "%" + location + "%").page(page).per(10)
+        end
+        @businesses = results
+        
     else
       @businesses = Business.order(id: :asc).page(params[:page]).per(10)
-      # @businesses = Business.order(Arel.sql('RANDOM()')).page(params[:page]).per(10)
     end
     return render json: { error: 'not_found' }, status: :not_found if !@businesses
     render 'api/businesses/index', status: :ok
@@ -105,46 +117,61 @@ class Api::BusinessesController < ApplicationController
       if key == 'location'
         isLocation = true
         location = params[:location]
+        location = location.downcase
       end
     }
 
+    page = params[:page] == 'undefined' ? 1 : params[:page]
+
+    if location == 'all locations' || location == ''
+      isLocation = false
+    end
+    if keyword == ''
+      isKeyword = false
+    end
+
     # filter by keyword (name or category) & location
     if isKeyword && isLocation
-      @allBusinesses = Business.all
-      filtered = []
-      # first get all businesses that match location, then filter both name & category by the keyword.
-      @location = @allBusinesses.where("city LIKE ?", "%" + location + "%")
-      @name = @location.where("LOWER(name) LIKE ?", "%" + keyword + "%")
-      @category = @location.where("LOWER(categories) LIKE ?", "%" + keyword + "%")
-      # push results to filtered array, flatten it & remove duplicates
-      filtered.push(@name).push(@category)
-      @businesses = filtered.flatten.uniq.sort_by(&:name)
+      split = location.split(',')
+      results = []
+      if split.length == 2  # filter by city & state
+        city = split[0]
+        state = split[1].strip
+        results = Business.where("(LOWER(city) LIKE ? AND LOWER(state) LIKE ?) AND (LOWER(name) LIKE ? OR LOWER(categories) LIKE ?)", "%" + city + "%", "%" + state + "%", "%" + keyword + "%", "%" + keyword + "%")
+          .page(page).per(10)
+      else  # filter by city or state
+        results = Business.where("(LOWER(city) LIKE ? OR LOWER(state) LIKE ?) AND (LOWER(name) LIKE ? OR LOWER(categories) LIKE ?)", "%" + location + "%", "%" + location + "%", "%" + keyword + "%", "%" + keyword + "%")
+          .page(page).per(10)
+      end
+
+      @businesses = results
       @keyword = keyword
       @location = location
       return render 'api/businesses/search', status: :ok
     end
 
-    # if search is by keyword, filter businesses by name & category
+    # if search is by keyword, filter businesses by name or category
     if isKeyword
-      @allBusinesses = Business.all
-      filtered = []
-      @name = @allBusinesses.where("LOWER(name) LIKE ?", "%" + keyword + "%")
-      @category = @allBusinesses.where("LOWER(categories) LIKE ?", "%" + keyword + "%")
-      filtered.push(@name).push(@category)
-      @businesses = filtered.flatten.uniq.sort_by(&:name)
+      results = Business.where("LOWER(name) LIKE ? OR LOWER(categories) LIKE ?", "%" + keyword + "%", "%" + keyword + "%").page(page).per(10)
+      @businesses = results
       @keyword = keyword
     end
 
     # if search is by location, filter businesses by city & state
     if isLocation
-      @allBusinesses = Business.all
-      filtered = []
-      @city = @allBusinesses.where("city LIKE ?", "%" + location + "%")
-      @state = @allBusinesses.where("state LIKE ?", "%" + location + "%")
-      filtered.push(@city).push(@state)
-      @businesses = filtered.flatten.uniq.sort_by(&:name)
+      split = location.split(',')
+      results = []
+      if split.length == 2  # filter by city & state'
+        city = split[0]
+        state = split[1].strip
+        results = Business.where("(LOWER(city) LIKE ? AND LOWER(state) LIKE ?)", "%" + city + "%", "%" + state + "%").page(page).per(10)
+      else  # filter by city or state
+        results = Business.where("LOWER(city) LIKE ? OR LOWER(state) LIKE ?", "%" + location + "%", "%" + location + "%").page(page).per(10)
+      end
+      @businesses = results
       @location = location
     end
+
     render 'api/businesses/search', status: :ok
   end
 
@@ -172,7 +199,7 @@ class Api::BusinessesController < ApplicationController
 
   def locations
     @businesses = Business.all
-    uniqueLocations = []
+    uniqueLocations = ['All locations']
 
     @businesses.each do |business|
       # loop through businesses to get all unique locations of: city, state

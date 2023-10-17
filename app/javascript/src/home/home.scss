@@ -1,20 +1,8 @@
-h1 {
-  color: red;
-}
-
-#businesses {
-  border: 2px dotted dodgerblue;
-  .business {
-    border: 1px solid orange;
-    margin: 1rem;
-    img {
-      max-width: 250px;
-      max-height: 200px;
-    }
-  }
-}
-
 button#loadMore {
   background: red;
   margin: 1rem;
+}
+
+.locationToggleIcon {
+  margin-left: 0.2rem;
 }
